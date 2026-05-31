@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -5,9 +7,17 @@ from app.routers import analytics, auth, chat, documents, public, settings
 
 app = FastAPI(title="Chatyy API", version="0.1.0")
 
+# In production, restrict to your frontend domain.
+# The public /public/* endpoints must stay open for the embeddable widget.
+ALLOWED_ORIGINS = (
+    os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+    if os.getenv("ENVIRONMENT") == "production"
+    else ["*"]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # allows widget to work on any website; lock this down in production
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
