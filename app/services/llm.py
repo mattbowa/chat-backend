@@ -26,9 +26,10 @@ async def stream_chat_response(
 
     full_system = (
         f"{system_prompt}\n\n"
-        "Answer only using the context below. "
-        "If the answer is not in the context, say so honestly.\n\n"
-        f"CONTEXT:\n{context}"
+        "Use the reference information below to answer the user's question. "
+        "Answer naturally and conversationally — never say phrases like 'based on the context' or 'according to the provided context'. "
+        "If the answer isn't covered in the reference information, say you don't have that information.\n\n"
+        f"REFERENCE INFORMATION:\n{context}"
     )
 
     async with client.messages.stream(

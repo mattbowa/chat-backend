@@ -31,7 +31,7 @@ CREATE INDEX idx_users_tenant ON users(tenant_id);
 -- Tenant settings
 CREATE TABLE tenant_settings (
     tenant_id UUID PRIMARY KEY REFERENCES tenants(id) ON DELETE CASCADE,
-    system_prompt TEXT NOT NULL DEFAULT 'You are a helpful assistant. Answer questions based only on the provided context.',
+    system_prompt TEXT NOT NULL DEFAULT 'You are a helpful assistant.',
     model TEXT NOT NULL DEFAULT 'claude-sonnet-4-6',
     temperature FLOAT NOT NULL DEFAULT 0.3,
     top_k_chunks INT NOT NULL DEFAULT 5,
