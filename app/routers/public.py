@@ -44,6 +44,7 @@ async def _check_rate_limit(tenant_id: uuid.UUID, db: AsyncSession) -> None:
 class PublicChatRequest(BaseModel):
     session_id: str
     message: str
+    visitor_email: str | None = None
 
 
 @router.post("/chat/{slug}")
@@ -69,6 +70,7 @@ async def public_chat(
         session_id=session_id,
         role="user",
         content=body.message,
+        visitor_email=body.visitor_email,
     )
     db.add(user_msg)
     await db.commit()

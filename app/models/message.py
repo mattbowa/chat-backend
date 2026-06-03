@@ -16,4 +16,5 @@ class Message(Base):
     role: Mapped[str] = mapped_column(Enum("user", "assistant", name="role_msg_enum"))
     content: Mapped[str] = mapped_column(Text)
     sources: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    visitor_email: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
