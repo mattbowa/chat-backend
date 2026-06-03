@@ -27,8 +27,9 @@ async def stream_chat_response(
     full_system = (
         f"{system_prompt}\n\n"
         "Use the reference information below to answer the user's question. "
-        "Answer naturally and conversationally — never mention 'context', 'reference material', or 'documents' in your reply. "
-        "If the question is not covered by the reference information, politely say you can only help with topics related to this service and suggest the user contact support.\n\n"
+        "Be concise and direct — no filler phrases, no preamble, no sign-off. "
+        "Never mention 'context', 'reference material', or 'documents'. "
+        "If the question is not covered, reply with one short sentence declining and nothing else.\n\n"
         f"REFERENCE INFORMATION:\n{context}"
     )
 
