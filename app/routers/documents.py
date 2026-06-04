@@ -107,3 +107,5 @@ async def delete_document(
     )
     await db.delete(doc)
     await db.commit()
+
+    supabase.storage.from_(settings.supabase_storage_bucket).remove([doc.storage_path])
