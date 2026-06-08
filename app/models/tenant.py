@@ -34,7 +34,7 @@ class TenantSettings(Base):
         Text,
         default="I'm sorry, I don't have information about that.",
     )
-    suggested_questions: Mapped[list] = mapped_column(JSON, default=list)
+    suggested_questions: Mapped[list] = mapped_column(ARRAY(String), default=list)
     # Branding
     bot_name: Mapped[str] = mapped_column(String(100), default="AI Assistant")
     primary_color: Mapped[str] = mapped_column(String(7), default="#2563eb")
