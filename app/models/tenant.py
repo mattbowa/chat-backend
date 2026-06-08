@@ -32,7 +32,7 @@ class TenantSettings(Base):
     max_response_tokens: Mapped[int] = mapped_column(Integer, default=1024)
     fallback_message: Mapped[str] = mapped_column(
         Text,
-        default="I'm sorry, I don't have information about that. Try one of the suggested topics below.",
+        default="I'm sorry, I don't have information about that.",
     )
     suggested_questions: Mapped[list] = mapped_column(JSON, default=list)
     # Branding
