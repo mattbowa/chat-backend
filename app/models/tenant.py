@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, Float, Integer, ARRAY
+from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, Float, Integer, ARRAY, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -30,6 +30,11 @@ class TenantSettings(Base):
     temperature: Mapped[float] = mapped_column(Float, default=0.3)
     top_k_chunks: Mapped[int] = mapped_column(Integer, default=5)
     max_response_tokens: Mapped[int] = mapped_column(Integer, default=1024)
+    fallback_message: Mapped[str] = mapped_column(
+        Text,
+        default="I'm sorry, I don't have information about that. Try one of the suggested topics below.",
+    )
+    suggested_questions: Mapped[list] = mapped_column(JSON, default=list)
     # Branding
     bot_name: Mapped[str] = mapped_column(String(100), default="AI Assistant")
     primary_color: Mapped[str] = mapped_column(String(7), default="#2563eb")

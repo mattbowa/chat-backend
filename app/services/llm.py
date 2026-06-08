@@ -21,6 +21,7 @@ async def stream_chat_response(
     model: str,
     temperature: float,
     max_tokens: int,
+    fallback_message: str = "I'm sorry, I don't have information about that.",
 ) -> AsyncGenerator[str, None]:
     context = _build_context_block(chunks)
 
@@ -29,7 +30,7 @@ async def stream_chat_response(
         "Use the reference information below to answer the user's question. "
         "Be concise and direct — no filler phrases, no preamble, no sign-off. "
         "Never mention 'context', 'reference material', or 'documents'. "
-        "If the question is not covered, reply with one short sentence declining and nothing else.\n\n"
+        f'If the question is not covered by the reference information, respond with exactly: "{fallback_message}" and nothing else.\n\n'
         f"REFERENCE INFORMATION:\n{context}"
     )
 
