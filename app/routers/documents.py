@@ -10,7 +10,7 @@ from sqlalchemy import func
 from app.core.config import settings
 from app.core.database import get_db
 
-FREE_TIER_DOC_LIMIT = 10
+DOC_LIMIT = 10
 
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 from app.models.document import Document
@@ -35,8 +35,11 @@ async def upload_document(
     doc_count = await db.execute(
         select(func.count(Document.id)).where(Document.tenant_id == user.tenant_id)
     )
-    if (doc_count.scalar() or 0) >= FREE_TIER_DOC_LIMIT:
-        raise HTTPException(400, f"Free tier limit of {FREE_TIER_DOC_LIMIT} documents reached.")
+    if (doc_count.scalar() or 0) >= DOC_LIMIT:
+        raise HTTPException(
+            400,
+            f"Document limit of {DOC_LIMIT} reached. Get in touch to have it raised.",
+        )
 
     ext = "." + file.filename.split(".")[-1].lower() if "." in file.filename else ""
     if ext not in ALLOWED_EXTENSIONS:

@@ -9,6 +9,7 @@ class SettingsOut(BaseModel):
     max_response_tokens: int
     fallback_message: str
     suggested_questions: list[str]
+    allowed_domains: list[str]
     bot_name: str
     primary_color: str
     logo_url: str | None
@@ -24,6 +25,7 @@ class SettingsUpdate(BaseModel):
     max_response_tokens: int | None = Field(None, ge=256, le=4096)
     fallback_message: str | None = None
     suggested_questions: list[str] | None = None
+    allowed_domains: list[str] | None = None
     bot_name: str | None = None
     primary_color: str | None = None
     logo_url: str | None = None

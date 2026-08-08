@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, Float, Integer, ARRAY, JSON
+from sqlalchemy import DateTime, ForeignKey, String, Text, Float, Integer, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -13,7 +13,6 @@ class Tenant(Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255))
     slug: Mapped[str] = mapped_column(String(100), unique=True, index=True)
-    plan: Mapped[str] = mapped_column(Enum("free", "pro", "enterprise", name="plan_enum"), default="free")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     users: Mapped[list["User"]] = relationship(back_populates="tenant")
@@ -35,6 +34,8 @@ class TenantSettings(Base):
         default="I'm sorry, I don't have information about that.",
     )
     suggested_questions: Mapped[list] = mapped_column(ARRAY(String), default=list)
+    # Domains allowed to embed the public widget. Empty = allow all.
+    allowed_domains: Mapped[list] = mapped_column(ARRAY(String), default=list)
     # Branding
     bot_name: Mapped[str] = mapped_column(String(100), default="AI Assistant")
     primary_color: Mapped[str] = mapped_column(String(7), default="#2563eb")

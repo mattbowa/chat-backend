@@ -33,6 +33,51 @@ async def _embed_texts(texts: list[str]) -> list[list[float]]:
     return [item.embedding for item in response.data]
 
 
+async def ingest_text(db, tenant_id: uuid.UUID, filename: str, storage_path: str, content: str) -> None:
+    """Ingest already-extracted text as a Document row + chunks.
+
+    Used by integration syncs (e.g. the website crawler) that produce text
+    rather than uploaded files. Caller owns the session/commit.
+    """
+    doc = Document(
+        tenant_id=tenant_id,
+        filename=filename,
+        storage_path=storage_path,
+        status="processing",
+    )
+    db.add(doc)
+    await db.flush()
+
+    try:
+        chunks = splitter.split_text(content)
+        all_embeddings: list[list[float]] = []
+        for i in range(0, len(chunks), 100):
+            embeddings = await _embed_texts(chunks[i : i + 100])
+            all_embeddings.extend(embeddings)
+
+        for idx, (chunk_text, embedding) in enumerate(zip(chunks, all_embeddings)):
+            await db.execute(
+                text(
+                    "INSERT INTO document_chunks (id, tenant_id, document_id, chunk_index, content, embedding) "
+                    "VALUES (:id, :tenant_id, :doc_id, :idx, :content, :embedding)"
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "tenant_id": str(tenant_id),
+                    "doc_id": str(doc.id),
+                    "idx": idx,
+                    "content": chunk_text,
+                    "embedding": str(embedding),
+                },
+            )
+
+        doc.chunk_count = len(chunks)
+        doc.status = "ready"
+    except Exception as e:
+        doc.status = "error"
+        doc.error_message = str(e)[:900]
+
+
 async def ingest_document(
     document_id: uuid.UUID,
     tenant_id: uuid.UUID,

@@ -64,7 +64,7 @@ A multi-tenant SaaS platform where clients sign up, upload documents, customize 
 | id | uuid PK | |
 | name | text | company/project name |
 | slug | text unique | used in widget URL |
-| plan | enum | free / pro / enterprise |
+| plan | enum | vestigial (`plan_enum`, defaults to `free`) — no plans exist, nothing reads it |
 | created_at | timestamptz | |
 
 ### users
@@ -222,10 +222,9 @@ chatyy/
 - [ ] Embeddable widget (JS snippet + /widget/[slug] route)
 
 ### Phase 3 — Product
-- [ ] Stripe billing (usage-based or seat-based)
+- [x] Free-tier message cap (`MONTHLY_MESSAGE_LIMIT`) with contact form on overage — replaced the planned billing work; there is no paid tier and no Stripe
 - [ ] Usage analytics dashboard
 - [ ] Doc processing queue (Celery or Supabase Edge Functions)
-- [ ] Rate limiting per plan tier
 - [ ] CI/CD (GitHub Actions → Railway or Render)
 
 ---

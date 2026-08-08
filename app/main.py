@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import analytics, auth, chat, documents, public, settings
+from app.routers import analytics, auth, chat, contact, documents, integrations, public, settings
 
 app = FastAPI(title="Chatyy API", version="0.1.0")
 
@@ -29,6 +29,8 @@ app.include_router(chat.router)
 app.include_router(settings.router)
 app.include_router(public.router)
 app.include_router(analytics.router)
+app.include_router(integrations.router)
+app.include_router(contact.router)
 
 
 @app.get("/health")

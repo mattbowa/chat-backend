@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.tenant import Tenant, TenantSettings
@@ -71,7 +72,7 @@ async def me(user: User = Depends(current_user), db: AsyncSession = Depends(get_
         tenant_id=str(tenant.id),
         tenant_name=tenant.name,
         tenant_slug=tenant.slug,
-        plan=tenant.plan,
+        is_owner=user.email.lower() == settings.contact_to_email.lower(),
     )
 
 

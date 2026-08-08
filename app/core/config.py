@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     openai_api_key: str
     anthropic_api_key: str
 
+    # Contact form notifications. Unset resend_api_key disables sending —
+    # submissions are still persisted to contact_submissions.
+    resend_api_key: str = ""
+    contact_from_email: str = "onboarding@resend.dev"
+    contact_to_email: str = "matt.bowa04@gmail.com"
+
+    monthly_message_limit: int = 100
+
     environment: str = "development"
 
 

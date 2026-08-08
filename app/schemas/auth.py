@@ -25,4 +25,4 @@ class UserMe(BaseModel):
     tenant_id: str
     tenant_name: str
     tenant_slug: str
-    plan: str
+    is_owner: bool
