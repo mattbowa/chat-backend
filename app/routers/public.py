@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 import uuid
@@ -16,10 +17,12 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.message import Message
 from app.models.tenant import Tenant, TenantSettings
-from app.services.llm import stream_chat_response
+from app.services.llm import STREAM_ERROR_MESSAGE, stream_chat_response
 from app.services.retrieval import embed_query, retrieve_chunks
 
 router = APIRouter(prefix="/public", tags=["public"])
+
+logger = logging.getLogger(__name__)
 
 SIMILARITY_THRESHOLD = 0.35
 
@@ -179,17 +182,27 @@ async def public_chat(
             return
 
         full_response = ""
-        async for token in stream_chat_response(
-            query=body.message,
-            chunks=chunks,
-            system_prompt=tenant_settings.system_prompt,
-            model=tenant_settings.model,
-            temperature=tenant_settings.temperature,
-            max_tokens=tenant_settings.max_response_tokens,
-            fallback_message=tenant_settings.fallback_message,
-        ):
-            full_response += token
-            yield f"data: {json.dumps({'token': token})}\n\n"
+        try:
+            async for token in stream_chat_response(
+                query=body.message,
+                chunks=chunks,
+                system_prompt=tenant_settings.system_prompt,
+                model=tenant_settings.model,
+                temperature=tenant_settings.temperature,
+                max_tokens=tenant_settings.max_response_tokens,
+                fallback_message=tenant_settings.fallback_message,
+            ):
+                full_response += token
+                yield f"data: {json.dumps({'token': token})}\n\n"
+        except Exception:
+            # The 200 and headers are already on the wire, so this can't become
+            # an HTTP error response — without an explicit error event the
+            # widget would sit on a typing indicator forever. Nothing is
+            # persisted, so the reply doesn't count against the monthly limit.
+            logger.exception("LLM stream failed for tenant %s", tenant.id)
+            yield f"data: {json.dumps({'error': STREAM_ERROR_MESSAGE})}\n\n"
+            yield f"data: {json.dumps({'done': True, 'sources': [], 'suggested_questions': []})}\n\n"
+            return
 
         # The LLM is instructed to echo the fallback message verbatim when the
         # retrieved context doesn't cover the question — count that too.

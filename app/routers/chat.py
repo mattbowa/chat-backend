@@ -1,4 +1,5 @@
 import json
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends
@@ -12,10 +13,12 @@ from app.models.tenant import TenantSettings
 from app.models.user import User
 from app.routers.deps import current_user
 from app.schemas.chat import ChatRequest, MessageOut, SessionOut
-from app.services.llm import stream_chat_response
+from app.services.llm import STREAM_ERROR_MESSAGE, stream_chat_response
 from app.services.retrieval import embed_query, retrieve_chunks
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("")
@@ -41,16 +44,25 @@ async def chat(
 
     async def event_stream():
         full_response = ""
-        async for token in stream_chat_response(
-            query=body.message,
-            chunks=chunks,
-            system_prompt=tenant_settings.system_prompt,
-            model=tenant_settings.model,
-            temperature=tenant_settings.temperature,
-            max_tokens=tenant_settings.max_response_tokens,
-        ):
-            full_response += token
-            yield f"data: {json.dumps({'token': token})}\n\n"
+        try:
+            async for token in stream_chat_response(
+                query=body.message,
+                chunks=chunks,
+                system_prompt=tenant_settings.system_prompt,
+                model=tenant_settings.model,
+                temperature=tenant_settings.temperature,
+                max_tokens=tenant_settings.max_response_tokens,
+            ):
+                full_response += token
+                yield f"data: {json.dumps({'token': token})}\n\n"
+        except Exception:
+            # The 200 and headers are already on the wire, so this can't become
+            # an HTTP error response — without an explicit error event the UI
+            # would sit on a typing indicator forever.
+            logger.exception("LLM stream failed for tenant %s", user.tenant_id)
+            yield f"data: {json.dumps({'error': STREAM_ERROR_MESSAGE})}\n\n"
+            yield f"data: {json.dumps({'done': True, 'sources': []})}\n\n"
+            return
 
         assistant_msg = Message(
             tenant_id=user.tenant_id,

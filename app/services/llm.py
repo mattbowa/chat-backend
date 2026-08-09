@@ -6,6 +6,10 @@ from app.core.config import settings
 
 client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
+# Shown to the end user when the LLM call fails mid-stream. Deliberately vague —
+# the real cause (billing, rate limit, outage) goes to the server log only.
+STREAM_ERROR_MESSAGE = "Sorry, something went wrong generating a reply. Please try again in a moment."
+
 
 def _build_context_block(chunks: list[dict]) -> str:
     parts = []
