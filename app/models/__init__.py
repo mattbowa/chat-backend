@@ -3,5 +3,6 @@ from app.models.user import User
 from app.models.document import Document
 from app.models.message import Message
 from app.models.contact import ContactSubmission
+from app.models.qa import QAPair
 
-__all__ = ["Tenant", "TenantSettings", "User", "Document", "Message", "ContactSubmission"]
+__all__ = ["Tenant", "TenantSettings", "User", "Document", "Message", "ContactSubmission", "QAPair"]

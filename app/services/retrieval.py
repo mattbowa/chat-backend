@@ -21,12 +21,29 @@ async def retrieve_chunks(
     query_embedding: list[float],
     top_k: int = 5,
 ) -> list[dict]:
+    """Nearest-neighbour search over document chunks AND curated Q&A pairs.
+
+    Both live in the same vector space (same embedding model), so one UNION'd
+    scan ranks them together and a curated answer competes on merit. Each row
+    carries a `kind` so the prompt builder can mark curated answers as
+    authoritative — see app/services/llm.py.
+
+    Note: the UNION means neither table's IVFFlat index (both commented out in
+    migrations, to be built by hand) can serve this as a single ANN lookup.
+    That's fine at current scale; revisit if a tenant's corpus gets large.
+    """
     result = await db.execute(
         text(
-            "SELECT content, document_id, chunk_index, "
+            "SELECT content, kind, ref_id, chunk_index, "
             "1 - (embedding <=> :embedding) AS similarity "
-            "FROM document_chunks "
-            "WHERE tenant_id = :tenant_id "
+            "FROM ("
+            "  SELECT content, 'document' AS kind, document_id AS ref_id, chunk_index, embedding "
+            "  FROM document_chunks WHERE tenant_id = :tenant_id "
+            "  UNION ALL "
+            "  SELECT 'Q: ' || question || E'\\nA: ' || answer AS content, "
+            "         'qa' AS kind, id AS ref_id, 0 AS chunk_index, embedding "
+            "  FROM qa_pairs WHERE tenant_id = :tenant_id"
+            ") AS candidates "
             "ORDER BY embedding <=> :embedding "
             "LIMIT :top_k"
         ),
@@ -39,7 +56,11 @@ async def retrieve_chunks(
     return [
         {
             "content": row.content,
-            "document_id": str(row.document_id),
+            "kind": row.kind,
+            # Kept named document_id for backwards compatibility: this field is
+            # persisted into messages.sources and read by the chat UI. For a
+            # curated pair it holds the qa_pairs id.
+            "document_id": str(row.ref_id),
             "chunk_index": row.chunk_index,
             "similarity": float(row.similarity),
         }
